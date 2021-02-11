@@ -6,6 +6,14 @@ handleErrors = (err) => {
   console.log(err.message, err.code);
   let errors = { email: "", password: "" };
 
+  if (err.message === 'incorrect email!') {
+    errors.email = 'this email is not registrated!'
+  }
+
+  if (err.message === 'incorrect password!') {
+    errors.password = 'this password is incorrect!'
+  }
+
   //duplicate email error code
   if (err.code === 11000) {
     errors.email = "this email is already registrated";
@@ -55,9 +63,12 @@ module.exports.login_post = async (req, res) => {
 
   try {
     const user = await User.login(email, password);
+    const token = craeteToken(user._id);
+    res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
     res.status(200).json({ user: user._id });
   } catch (err) {
-    res.status(400).json({});
-    console.log(err);
+    const errors = handleErrors(err);
+    res.status(400).json({ errors });
+    
   }
 };
